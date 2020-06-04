@@ -12,7 +12,7 @@
 ---
 ## 演示
 [演示地址](https://klxljun.github.io/lyricParsing/index.html)
-
+[博客链接](https://huyaoi.moe/2020/lyricparsing.html)
 ---
 ## 参数
 ```javascript

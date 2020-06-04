@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>演示</title>
+	</head>
+	<body>
+		<audio id="audios" controls="" style="width: 600px;" preload="none"></audio>
+		<br />
+		<canvas id="canvas" width="300" height="80"></canvas>
+		<div id="upx">
+			
+		</div>
+		<div id="downx">
+			
+		</div>
+	</body>
+	<script src="js/lyricParsing.js"></script>
+	<script>
+		var lrPar = new lyricParsing({
+            //音频标签
+            audio:document.getElementById("audios"),
+            //画布标签                  
+            canvas:document.getElementById('canvas'),
+            //音频链接
+            audiourl:"https://hygitshare.oss-cn-chengdu.aliyuncs.com/lyricParsing/lty_qcj.m4a",
+            //歌词全局偏移值
+            offset:60,
+            //调试模式
+            debug:false,
+            //画布刷新时间(毫秒)
+            reftime:7,
+            //渲染字体
+			rander_font:"32px Microsoft YaHei"
+		});
+		
+		let ajaxRequest = new XMLHttpRequest();
+		ajaxRequest.open('GET', 'https://hygitshare.oss-cn-chengdu.aliyuncs.com/lyricParsing/lty_qcj.lrc', true);
+		ajaxRequest.responseType = 'text';
+		ajaxRequest.onload = function() {
+			lrPar.init(ajaxRequest.response)
+		}
+		ajaxRequest.send();
+	</script>
+</html>

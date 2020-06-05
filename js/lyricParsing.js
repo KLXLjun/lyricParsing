@@ -23,7 +23,11 @@ function lyricParsing(option){
 	
 	this.ltext = "Hello World";
 	this.ltext2 = "Hello World2";
-	var timer = setInterval(() => {
+
+	this.ltext_p = 0;
+	this.ltext2_p = 0;
+	
+	this.timer = setInterval(() => {
 		this.ref_lrc();
 	}, this.Refresh_interval);
 	
@@ -48,6 +52,10 @@ function lyricParsing(option){
 			this.read_lrc();
 		}
 		this.audio.setAttribute("src",this.audiourl)
+	}
+
+	this.clear = function(){
+		clearInterval(this.timer)
 	}
 	
 	var Lrc_query={
@@ -232,7 +240,7 @@ function lyricParsing(option){
 		}
 		//console.groupEnd();
 		//lrc_append();
-		console.log(this.oLRC)
+		if(this.debug)console.log(this.oLRC)
 		this.render();
 	}
 	
@@ -241,7 +249,7 @@ function lyricParsing(option){
 		let t_status=this.audio.currentTime + (this.Global_lrc_offset / 1000) + (this.oLRC.offset / 1000);
 		if(this.oLRC.olrc){
 			if(!p_status){
-				if(this.debug)console.log(p_status,this.oLRC.olrc);
+				//if(this.debug)console.log(p_status,this.oLRC.olrc);
 				let time_s = t_status;
 				for (let a = 0; a < Lrc_query.ci; a++) { //循环
 					if (this.oLRC.ms[a].t < time_s) {
@@ -252,20 +260,19 @@ function lyricParsing(option){
 							let lens = this.oLRC.ms.length;
 							if(a + 1 < Lrc_query.ci){
 								if(this.oLRC.ms[a+1].t > time_s){
-									//console.log((this.oLRC.ms[a].t - time_s).toFixed(4))
-									
+									if(this.debug)console.log((this.oLRC.ms[a].t - time_s).toFixed(4))
+									let k = [-1,-1]
 									//除最后一行外
-									this.ktext = this.oLRC.ms[a].c;
-									this.ktext2 = this.oLRC.ms[a+1].c;
-									//console.log(this.oLRC.ms[a])
+									k[0] = a;	//上
+									k[1] = a + 1;	//下
 									
 									let upds = false;
 									if(this.lrcup){
-										if(this.ltext != this.ktext && this.ltext2 != this.ktext2){
+										if(this.ltext_p != k[0] && this.ltext2_p != k[1]){
 											upds = !upds;
 										}
 									}else{
-										if(this.ltext != this.ktext2 && this.ltext2 != this.ktext){
+										if(this.ltext_p != k[1] && this.ltext2_p != k[0]){
 											upds = !upds;
 										}
 									}
@@ -273,18 +280,21 @@ function lyricParsing(option){
 									if(upds){
 										this.lrcup = !this.lrcup
 									}
+
+									this.ltext = this.oLRC.ms[this.ltext_p].c;
+									this.ltext2 = this.oLRC.ms[this.ltext2_p].c;
 									
 									if(this.lrcup){
-										this.ltext = this.ktext;
-										this.ltext2 = this.ktext2;
+										this.ltext_p = a
+										this.ltext2_p = a + 1; 
 										
-										this.curX = con.measureText(this.ktext).width;
+										this.curX = con.measureText(this.ltext).width;
 										this.curX2 = 0;
 									}else{
-										this.ltext = this.ktext2;
-										this.ltext2 = this.ktext;
+										this.ltext_p = a + 1
+										this.ltext2_p = a; 
 										
-										this.curX2 = con.measureText(this.ktext).width;
+										this.curX2 = con.measureText(this.ltext2).width;
 										this.curX = 0;
 									}
 									this.render();
@@ -308,49 +318,55 @@ function lyricParsing(option){
 						if (Lrc_query.ci > 1) {
 							//console.log(a,Lrc_query.ci,a + 1 > Lrc_query.ci)
 							let lens = this.oLRC.ms.t[a].length;
+							let t_con = "";	//已唱的歌词
+							let p = 0;		//字符长度 用于判断字的位置
+							//判断这句下面是否还有歌词 没有就是最后一句
 							if(a + 1 < Lrc_query.ci){
 								if (this.oLRC.ms.t[a+1][0] > time_s) {
 									//if(this.debug)console.log(this.oLRC.ms.t[a]);
-									let t_con = "";
-									let p = 0;
+									let k = [-1,-1]
 									for(let g=0;g<lens;g++){
 										if(this.oLRC.ms.t[a][g] < time_s){
-											t_con += this.oLRC.ms.c[a][g];
-											this.ktext = this.oLRC.ms.al[a];
-											this.ktext2 = this.oLRC.ms.al[a+1];
+											t_con += this.oLRC.ms.c[a][g];		//已唱的歌词
+											k[0] = a;	//上
+											k[1] = a + 1;	//下
 											p = g;
 										}
 									}
 									if(this.debug)console.log(t_con);
 									let upds = false;
 									if(this.lrcup){
-										if(this.ltext != this.ktext && this.ltext2 != this.ktext2){
+										if(this.ltext_p != k[0] && this.ltext2_p != k[1]){
 											upds = !upds;
 										}
 									}else{
-										if(this.ltext != this.ktext2 && this.ltext2 != this.ktext){
+										if(this.ltext_p != k[1] && this.ltext2_p != k[0]){
 											upds = !upds;
 										}
 									}
 									
 									if(upds){
+										//对调
 										this.lrcup = !this.lrcup
 									}
 									
 									if(this.lrcup){
-										this.ltext = this.ktext;
-										this.ltext2 = this.ktext2;
+										this.ltext_p = a
+										this.ltext2_p = a + 1; 
 									}else{
-										this.ltext = this.ktext2;
-										this.ltext2 = this.ktext;
+										this.ltext_p = a + 1
+										this.ltext2_p = a; 
 									}
+
+									this.ltext = this.oLRC.ms.al[this.ltext_p];
+									this.ltext2 = this.oLRC.ms.al[this.ltext2_p];
 									
 									let gpps = con.measureText(this.oLRC.ms.c[a][p]).width;//当前唱的字的宽度
 									//console.log((g +1) < (lens - 1), g +1,lens - 1)
 									if((p + 1) < lens){ //判断是否到最后一个字
 										//console.log(con.measureText(t_con).width,con.measureText(ltext).width)
 										let gpps2 = con.measureText(t_con).width; 					//计算当前已唱部分宽度
-										let ggp = this.oLRC.ms.t[a][p+1] -this. oLRC.ms.t[a][p]; 	//当前行下一个字时间差
+										let ggp = this.oLRC.ms.t[a][p+1] - this.oLRC.ms.t[a][p]; 	//当前行下一个字时间差
 										let ggp2 = this.oLRC.ms.t[a][p+1] - time_s;					//计算下一个字离当前时间有多久
 										if(this.lrcup){
 											this.curX = (gpps2 - gpps) + ((Math.abs(1 - (ggp2 / ggp))).toFixed(3) * gpps);
@@ -387,11 +403,7 @@ function lyricParsing(option){
 									}
 								}
 							}else{
-								//ltext = oLRC.ms.al[a];
-								//console.log(ltext,con.measureText(ltext).width)
-								//console.log(oLRC.ms.al[a]);
-								let t_con = "";
-								let p = 0;
+								//最后一句
 								for(let g=0;g<lens;g++){
 									if(this.oLRC.ms.t[a][g] < time_s){
 										t_con += this.oLRC.ms.c[a][g];
@@ -415,12 +427,19 @@ function lyricParsing(option){
 										let ggp2 = this.oLRC.ms.t[a][p+1] - time_s;
 										if(!this.lrcup){
 											this.curX = (gpps2 - gpps) + ((Math.abs(1 - (ggp2 / ggp))).toFixed(3) * gpps);
+											if(this.curX > this.canvase.width){
+												this.leftX1 = -(this.curX - this.canvase.width);
+												//console.log(this.leftX1)
+											}
 											this.curX2 = 0;
 										}else{
 											this.curX2 = (gpps2 - gpps) + ((Math.abs(1 - (ggp2 / ggp))).toFixed(3) * gpps);
+											if(this.curX2 > this.canvase.width){
+												this.leftX2 = -(this.curX2 - this.canvase.width);
+												//console.log(this.leftX2)
+											}
 											this.curX = 0;
 										}
-										
 										//console.log(oLRC.ms.c[a][g],(Math.abs(1 - (ggp2 / ggp))).toFixed(3));
 									}else{
 										if(!this.lrcup){
